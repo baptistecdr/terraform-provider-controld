@@ -18,12 +18,13 @@ func TestAccCustomRuleResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccCustomRuleResourceConfig(0, true),
+				Config: testAccCustomRuleResourceConfig(0, true, "blocked for testing"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "hostname", "tf-acc-test.example.com"),
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "do", "0"),
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "status", "true"),
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "group", "0"),
+					resource.TestCheckResourceAttr("controld_custom_rule.test", "comment", "blocked for testing"),
 					resource.TestCheckResourceAttrSet("controld_custom_rule.test", "order"),
 				),
 			},
@@ -36,10 +37,11 @@ func TestAccCustomRuleResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccCustomRuleResourceConfig(1, false),
+				Config: testAccCustomRuleResourceConfig(1, false, "updated comment"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "do", "1"),
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "status", "false"),
+					resource.TestCheckResourceAttr("controld_custom_rule.test", "comment", "updated comment"),
 				),
 			},
 			// Delete testing automatically occurs in TestCase
@@ -59,7 +61,7 @@ func testAccCustomRuleImportStateIDFunc(resourceName string) resource.ImportStat
 	}
 }
 
-func testAccCustomRuleResourceConfig(do int, status bool) string {
+func testAccCustomRuleResourceConfig(do int, status bool, comment string) string {
 	return fmt.Sprintf(`
 resource "controld_profile" "test" {
   name = "tf-acc-test-custom-rule-profile"
@@ -70,6 +72,7 @@ resource "controld_custom_rule" "test" {
   hostname   = "tf-acc-test.example.com"
   do         = %[1]d
   status     = %[2]t
+  comment    = %[3]q
 }
-`, do, status)
+`, do, status, comment)
 }

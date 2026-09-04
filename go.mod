@@ -3,7 +3,7 @@ module github.com/baptistecdr/terraform-provider-controld
 go 1.25.8
 
 require (
-	github.com/baptistecdr/controld-go v0.0.10
+	github.com/baptistecdr/controld-go v0.0.11
 	github.com/hashicorp/terraform-plugin-docs v0.25.0
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0

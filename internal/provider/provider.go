@@ -114,6 +114,7 @@ func (p *ControldProvider) DataSources(ctx context.Context) []func() datasource.
 		NewServicesDataSource,
 		NewNativeFiltersDataSource,
 		NewExternalFiltersDataSource,
+		NewProxiesDataSource,
 		NewUserDataSource,
 	}
 }

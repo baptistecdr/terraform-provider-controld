@@ -5,9 +5,7 @@ package provider
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -50,6 +48,7 @@ type CustomRuleResourceModel struct {
 	ViaV6     types.String `tfsdk:"via_v6"`
 	Group     types.Int64  `tfsdk:"group"`
 	Order     types.Int64  `tfsdk:"order"`
+	Comment   types.String `tfsdk:"comment"`
 }
 
 func (r *CustomRuleResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -99,6 +98,10 @@ func (r *CustomRuleResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"via_v6": schema.StringAttribute{
 				Optional:            true,
 				MarkdownDescription: "The IPv6 destination used when `do` is `spoof` or `redirect`.",
+			},
+			"comment": schema.StringAttribute{
+				Optional:            true,
+				MarkdownDescription: "A comment describing this rule.",
 			},
 			"group": schema.Int64Attribute{
 				Optional:            true,
@@ -151,6 +154,10 @@ func (r *CustomRuleResource) Create(ctx context.Context, req resource.CreateRequ
 		v := int(data.Group.ValueInt64())
 		params.Group = &v
 	}
+	if !data.Comment.IsNull() {
+		v := data.Comment.ValueString()
+		params.Comment = &v
+	}
 
 	rules, err := r.client.CreateProfileCustomRule(ctx, params)
 	if err != nil {
@@ -167,6 +174,9 @@ func (r *CustomRuleResource) Create(ctx context.Context, req resource.CreateRequ
 	data.Status = types.BoolValue(bool(rules[0].Status))
 	if rules[0].Order != nil {
 		data.Order = types.Int64Value(int64(*rules[0].Order))
+	}
+	if rules[0].Comment != nil {
+		data.Comment = types.StringValue(*rules[0].Comment)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -194,6 +204,9 @@ func (r *CustomRuleResource) Read(ctx context.Context, req resource.ReadRequest,
 	data.Status = types.BoolValue(bool(rule.Action.Status))
 	data.Group = types.Int64Value(int64(rule.Group))
 	data.Order = types.Int64Value(int64(rule.Order))
+	if rule.Comment != nil {
+		data.Comment = types.StringValue(*rule.Comment)
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -224,6 +237,10 @@ func (r *CustomRuleResource) Update(ctx context.Context, req resource.UpdateRequ
 		v := int(data.Group.ValueInt64())
 		params.Group = &v
 	}
+	if !data.Comment.IsNull() {
+		v := data.Comment.ValueString()
+		params.Comment = &v
+	}
 
 	rules, err := r.client.UpdateProfileCustomRule(ctx, params)
 	if err != nil {
@@ -239,6 +256,9 @@ func (r *CustomRuleResource) Update(ctx context.Context, req resource.UpdateRequ
 	data.Status = types.BoolValue(bool(rules[0].Status))
 	if rules[0].Order != nil {
 		data.Order = types.Int64Value(int64(*rules[0].Order))
+	}
+	if rules[0].Comment != nil {
+		data.Comment = types.StringValue(*rules[0].Comment)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
@@ -290,6 +310,9 @@ func (r *CustomRuleResource) ImportState(ctx context.Context, req resource.Impor
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("status"), bool(rule.Action.Status))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("group"), int64(rule.Group))...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("order"), int64(rule.Order))...)
+	if rule.Comment != nil {
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("comment"), *rule.Comment)...)
+	}
 }
 
 // findCustomRule searches for hostname within a single rule folder identified
@@ -307,30 +330,18 @@ func findCustomRule(ctx context.Context, client *controld.API, profileID string,
 	return nil, nil
 }
 
-// listCustomRulesInFolder lists the custom rules in a single folder. The
-// ControlD API rejects "0" as a folder id for the default/ungrouped folder
-// (it must be listed via an empty folder path segment instead), but
-// controld-go's ListProfileCustomRules refuses an empty FolderID, so folder 0
-// is fetched with a raw request instead.
+// listCustomRulesInFolder lists the custom rules in a single folder. folderID
+// 0 means the default/ungrouped (root) folder, listed by leaving FolderID
+// empty.
 func listCustomRulesInFolder(ctx context.Context, client *controld.API, profileID string, folderID int) ([]controld.Rule, error) {
+	folderIDParam := ""
 	if folderID != 0 {
-		return client.ListProfileCustomRules(ctx, controld.ListProfileCustomRulesParams{
-			ProfileID: profileID,
-			FolderID:  strconv.Itoa(folderID),
-		})
+		folderIDParam = strconv.Itoa(folderID)
 	}
-
-	raw, err := client.Raw(ctx, http.MethodGet, fmt.Sprintf("/profiles/%s/rules/", profileID), nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	var body struct {
-		Rules []controld.Rule `json:"rules"`
-	}
-	if err := json.Unmarshal(raw.Body, &body); err != nil {
-		return nil, fmt.Errorf("unable to unmarshal custom rules: %w", err)
-	}
-	return body.Rules, nil
+	return client.ListProfileCustomRules(ctx, controld.ListProfileCustomRulesParams{
+		ProfileID: profileID,
+		FolderID:  folderIDParam,
+	})
 }
 
 // findCustomRuleAnyFolder searches for hostname across every rule folder in

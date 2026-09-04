@@ -19,6 +19,7 @@ resource "controld_custom_rule" "block_ads" {
   do         = 0 # block
   status     = true
   group      = controld_rule_folder.ads.id
+  comment    = "Known ad server"
 }
 ```
 
@@ -34,6 +35,7 @@ resource "controld_custom_rule" "block_ads" {
 
 ### Optional
 
+- `comment` (String) A comment describing this rule.
 - `group` (Number) The identifier of the rule folder (`controld_rule_folder`) this rule belongs to. `0` means no folder.
 - `via` (String) The destination IP/hostname used when `do` is `spoof` or `redirect`.
 - `via_v6` (String) The IPv6 destination used when `do` is `spoof` or `redirect`.

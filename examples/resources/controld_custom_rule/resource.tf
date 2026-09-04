@@ -4,4 +4,5 @@ resource "controld_custom_rule" "block_ads" {
   do         = 0 # block
   status     = true
   group      = controld_rule_folder.ads.id
+  comment    = "Known ad server"
 }
