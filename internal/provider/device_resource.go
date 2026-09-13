@@ -34,7 +34,7 @@ var validDeviceIcons = []string{
 	string(controld.TVApple), string(controld.TVAndroid), string(controld.TVFireTV), string(controld.TVSamsung), string(controld.TVOther),
 	string(controld.RouterAsus), string(controld.RouterDDWRT), string(controld.RouterFirewalla), string(controld.RouterFreshTomato), string(controld.RouterGLiNET),
 	string(controld.RouterOpenWRT), string(controld.RouterOPNsense), string(controld.RouterPfSense), string(controld.RouterSynology), string(controld.RouterUbiquiti),
-	string(controld.RouterWindows), string(controld.RouterLinux), string(controld.RouterOther),
+	string(controld.RouterWindows), string(controld.RouterLinux), string(controld.RouterOther), string(controld.RouterTailscale),
 }
 
 func NewDeviceResource() resource.Resource {

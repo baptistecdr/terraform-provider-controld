@@ -26,7 +26,7 @@ resource "controld_device" "laptop" {
 
 ### Required
 
-- `icon` (String) The device icon. One of: `[desktop-windows desktop-mac desktop-linux mobile-ios mobile-android browser-chrome browser-firefox browser-edge browser-brave browser-other tv-apple tv-android tv-firetv tv-samsung tv router-asus router-ddwrt router-firewalla router-freshtomato router-glinet router-openwrt router-opnsense router-pfsense router-synology router-ubiquiti router-windows router-linux router]`. Changing this forces a new resource to be created, as the ControlD API does not support updating it.
+- `icon` (String) The device icon. One of: `[desktop-windows desktop-mac desktop-linux mobile-ios mobile-android browser-chrome browser-firefox browser-edge browser-brave browser-other tv-apple tv-android tv-firetv tv-samsung tv router-asus router-ddwrt router-firewalla router-freshtomato router-glinet router-openwrt router-opnsense router-pfsense router-synology router-ubiquiti router-windows router-linux router router-tailscale]`. Changing this forces a new resource to be created, as the ControlD API does not support updating it.
 - `name` (String) The name of the device.
 - `profile_id` (String) The identifier of the profile applied to this device.
 
