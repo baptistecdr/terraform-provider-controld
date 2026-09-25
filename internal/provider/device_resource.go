@@ -278,19 +278,26 @@ func (r *DeviceResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *DeviceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data DeviceResourceModel
+	var data, state DeviceResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	name := data.Name.ValueString()
-	profileID := data.ProfileID.ValueString()
 	params := controld.UpdateDeviceParams{
-		DeviceID:  data.ID.ValueString(),
-		Name:      &name,
-		ProfileID: &profileID,
+		DeviceID: data.ID.ValueString(),
+	}
+	// The API rejects an unchanged name (or DDNS subdomain) as a duplicate of
+	// the device's own current value, so only send them when they changed.
+	if !data.Name.Equal(state.Name) {
+		v := data.Name.ValueString()
+		params.Name = &v
+	}
+	if !data.ProfileID.Equal(state.ProfileID) {
+		v := data.ProfileID.ValueString()
+		params.ProfileID = &v
 	}
 	if !data.ProfileID2.IsNull() {
 		v := data.ProfileID2.ValueString()
@@ -324,7 +331,7 @@ func (r *DeviceResource) Update(ctx context.Context, req resource.UpdateRequest,
 		v := controld.IntBool(data.DDNSStatus.ValueBool())
 		params.DDNSStatus = &v
 	}
-	if !data.DDNSSubdomain.IsNull() && !data.DDNSSubdomain.IsUnknown() {
+	if !data.DDNSSubdomain.IsNull() && !data.DDNSSubdomain.IsUnknown() && !data.DDNSSubdomain.Equal(state.DDNSSubdomain) {
 		v := data.DDNSSubdomain.ValueString()
 		params.DDNSSubdomain = &v
 	}

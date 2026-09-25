@@ -178,30 +178,34 @@ func (r *ProfileResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *ProfileResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var data ProfileResourceModel
+	var data, state ProfileResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	name := data.Name.ValueString()
-	params := controld.UpdateProfileParams{
-		ProfileID: data.ID.ValueString(),
-		Name:      &name,
+	// Only rename when the name changed: resending the current name isn't
+	// needed and risks a duplicate-name rejection from the API.
+	if data.Name.Equal(state.Name) {
+		data.Updated = state.Updated
+	} else {
+		name := data.Name.ValueString()
+		profiles, err := r.client.UpdateProfile(ctx, controld.UpdateProfileParams{
+			ProfileID: data.ID.ValueString(),
+			Name:      &name,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to Update Profile", err.Error())
+			return
+		}
+		if len(profiles) != 1 {
+			resp.Diagnostics.AddError("Unexpected ControlD API Response", fmt.Sprintf("Expected exactly one profile to be updated, got %d.", len(profiles)))
+			return
+		}
+		data.Updated = types.Int64Value(profiles[0].Updated.Unix())
 	}
-
-	profiles, err := r.client.UpdateProfile(ctx, params)
-	if err != nil {
-		resp.Diagnostics.AddError("Unable to Update Profile", err.Error())
-		return
-	}
-	if len(profiles) != 1 {
-		resp.Diagnostics.AddError("Unexpected ControlD API Response", fmt.Sprintf("Expected exactly one profile to be updated, got %d.", len(profiles)))
-		return
-	}
-
-	data.Updated = types.Int64Value(profiles[0].Updated.Unix())
 
 	if err := r.applyWriteOnlyOptions(ctx, data); err != nil {
 		resp.Diagnostics.AddError("Unable to Apply Profile Options", err.Error())

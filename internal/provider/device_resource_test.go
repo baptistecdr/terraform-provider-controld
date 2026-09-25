@@ -41,6 +41,15 @@ func TestAccDeviceResource(t *testing.T) {
 					resource.TestCheckResourceAttr("controld_device.test", "name", "tf-acc-test-device-renamed"),
 				),
 			},
+			// Updating a non-name attribute must not resend the unchanged name,
+			// which the API rejects as a duplicate of the device's own name.
+			{
+				Config: testAccDeviceResourceConfigWithStats("tf-acc-test-device-renamed", "desktop-mac", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("controld_device.test", "name", "tf-acc-test-device-renamed"),
+					resource.TestCheckResourceAttr("controld_device.test", "stats", "1"),
+				),
+			},
 			// Delete testing automatically occurs in TestCase
 		},
 	})
@@ -59,4 +68,20 @@ resource "controld_device" "test" {
   learn_ip   = true
 }
 `, name, icon)
+}
+
+func testAccDeviceResourceConfigWithStats(name, icon string, stats int) string {
+	return fmt.Sprintf(`
+resource "controld_profile" "test" {
+  name = "tf-acc-test-device-profile"
+}
+
+resource "controld_device" "test" {
+  name       = %[1]q
+  profile_id = controld_profile.test.id
+  icon       = %[2]q
+  learn_ip   = true
+  stats      = %[3]d
+}
+`, name, icon, stats)
 }
