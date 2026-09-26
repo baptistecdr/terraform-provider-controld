@@ -234,6 +234,21 @@ func (r *DeviceResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	// CreateDeviceParams has no status: ControlD creates every device as
+	// pending (0). Promote it afterwards when a different status was requested,
+	// otherwise the state would contradict the plan.
+	if !data.Status.IsNull() && !data.Status.IsUnknown() && data.Status.ValueInt64() != int64(device.Status) {
+		status := controld.DeviceStatus(data.Status.ValueInt64())
+		device, err = r.client.UpdateDevice(ctx, controld.UpdateDeviceParams{
+			DeviceID: device.PK,
+			Status:   &status,
+		})
+		if err != nil {
+			resp.Diagnostics.AddError("Unable to Set Device Status", err.Error())
+			return
+		}
+	}
+
 	r.updateModelFromDevice(&data, device)
 
 	if !data.CtrldCustomConfig.IsNull() {

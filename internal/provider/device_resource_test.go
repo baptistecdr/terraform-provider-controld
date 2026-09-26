@@ -85,3 +85,28 @@ resource "controld_device" "test" {
 }
 `, name, icon, stats)
 }
+
+// ControlD creates every device as pending (0) regardless of the requested
+// status, so status = 1 must not fail with an inconsistent result on create.
+func TestAccDeviceResourceStatusOnCreate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "controld_profile" "test" {
+  name = "tfacc-device-status-pf"
+}
+
+resource "controld_device" "test" {
+  name       = "tfacc-device-status"
+  profile_id = controld_profile.test.id
+  icon       = "desktop-mac"
+  status     = 1
+}
+`,
+			},
+		},
+	})
+}
