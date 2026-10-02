@@ -28,7 +28,9 @@ func testAccPreCheck(t *testing.T) {
 
 // testAccRandomName returns a unique resource name so concurrent or
 // interrupted runs against the shared ControlD account never collide on the
-// name-uniqueness checks the API enforces.
+// name-uniqueness checks the API enforces. The API caps names at 32
+// characters, so the suffix is 7 characters ("-" plus 6) and prefixes must
+// leave room for it, plus 4 more for the "-new" rename suffix where used.
 func testAccRandomName(prefix string) string {
-	return acctest.RandomWithPrefix(prefix)
+	return prefix + "-" + acctest.RandString(6)
 }

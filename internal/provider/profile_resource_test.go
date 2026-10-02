@@ -12,7 +12,7 @@ import (
 
 func TestAccProfileResource(t *testing.T) {
 	name := testAccRandomName("tfacc-profile")
-	renamed := name + "-renamed"
+	renamed := name + "-new"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

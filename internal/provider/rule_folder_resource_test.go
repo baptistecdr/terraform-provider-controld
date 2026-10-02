@@ -12,9 +12,9 @@ import (
 )
 
 func TestAccRuleFolderResource(t *testing.T) {
-	profileName := testAccRandomName("tfacc-rule-folder-profile")
+	profileName := testAccRandomName("tfacc-folder-profile")
 	folderName := testAccRandomName("tfacc-rule-folder")
-	renamed := folderName + "-renamed"
+	renamed := folderName + "-new"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },

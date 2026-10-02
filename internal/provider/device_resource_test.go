@@ -13,7 +13,7 @@ import (
 func TestAccDeviceResource(t *testing.T) {
 	profileName := testAccRandomName("tfacc-device-profile")
 	deviceName := testAccRandomName("tfacc-device")
-	renamed := deviceName + "-renamed"
+	renamed := deviceName + "-new"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
