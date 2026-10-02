@@ -12,15 +12,19 @@ import (
 )
 
 func TestAccRuleFolderResource(t *testing.T) {
+	profileName := testAccRandomName("tfacc-rule-folder-profile")
+	folderName := testAccRandomName("tfacc-rule-folder")
+	renamed := folderName + "-renamed"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccRuleFolderResourceConfig("tf-acc-test-folder", 0, true),
+				Config: testAccRuleFolderResourceConfig(profileName, folderName, 0, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("controld_rule_folder.test", "name", "tf-acc-test-folder"),
+					resource.TestCheckResourceAttr("controld_rule_folder.test", "name", folderName),
 					resource.TestCheckResourceAttr("controld_rule_folder.test", "do", "0"),
 					resource.TestCheckResourceAttr("controld_rule_folder.test", "status", "true"),
 					resource.TestCheckResourceAttrSet("controld_rule_folder.test", "id"),
@@ -35,9 +39,9 @@ func TestAccRuleFolderResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccRuleFolderResourceConfig("tf-acc-test-folder-renamed", 1, false),
+				Config: testAccRuleFolderResourceConfig(profileName, renamed, 1, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("controld_rule_folder.test", "name", "tf-acc-test-folder-renamed"),
+					resource.TestCheckResourceAttr("controld_rule_folder.test", "name", renamed),
 					resource.TestCheckResourceAttr("controld_rule_folder.test", "do", "1"),
 					resource.TestCheckResourceAttr("controld_rule_folder.test", "status", "false"),
 				),
@@ -59,17 +63,17 @@ func testAccRuleFolderImportStateIDFunc(resourceName string) resource.ImportStat
 	}
 }
 
-func testAccRuleFolderResourceConfig(name string, do int, status bool) string {
+func testAccRuleFolderResourceConfig(profileName, name string, do int, status bool) string {
 	return fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tf-acc-test-rule-folder-profile"
+  name = %[1]q
 }
 
 resource "controld_rule_folder" "test" {
   profile_id = controld_profile.test.id
-  name       = %[1]q
-  do         = %[2]d
-  status     = %[3]t
+  name       = %[2]q
+  do         = %[3]d
+  status     = %[4]t
 }
-`, name, do, status)
+`, profileName, name, do, status)
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 )
 
 // testAccProtoV6ProviderFactories are used to instantiate a provider during
@@ -23,4 +24,11 @@ func testAccPreCheck(t *testing.T) {
 	if os.Getenv("CONTROLD_API_TOKEN") == "" {
 		t.Fatal("CONTROLD_API_TOKEN must be set for acceptance tests")
 	}
+}
+
+// testAccRandomName returns a unique resource name so concurrent or
+// interrupted runs against the shared ControlD account never collide on the
+// name-uniqueness checks the API enforces.
+func testAccRandomName(prefix string) string {
+	return acctest.RandomWithPrefix(prefix)
 }

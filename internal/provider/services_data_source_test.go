@@ -4,12 +4,15 @@
 package provider
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
 func TestAccServicesDataSource(t *testing.T) {
+	profileName := testAccRandomName("tfacc-services-ds")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
@@ -18,9 +21,9 @@ func TestAccServicesDataSource(t *testing.T) {
 				// ListProfileServices only returns services with an explicit
 				// action configured on the profile, so a freshly created
 				// profile starts with an empty list: configure one first.
-				Config: `
+				Config: fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tfacc-services-ds-profile"
+  name = %[1]q
 }
 
 resource "controld_service" "netflix" {
@@ -35,7 +38,7 @@ data "controld_services" "all" {
 
   depends_on = [controld_service.netflix]
 }
-`,
+`, profileName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.controld_services.all", "services.#"),
 					resource.TestCheckResourceAttrSet("data.controld_services.all", "services.0.name"),

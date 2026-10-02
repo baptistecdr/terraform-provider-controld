@@ -12,13 +12,15 @@ import (
 )
 
 func TestAccFilterResource(t *testing.T) {
+	profileName := testAccRandomName("tfacc-filter")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccFilterResourceConfig(true),
+				Config: testAccFilterResourceConfig(profileName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_filter.test", "filter", "malware"),
 					resource.TestCheckResourceAttr("controld_filter.test", "status", "true"),
@@ -33,7 +35,7 @@ func TestAccFilterResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccFilterResourceConfig(false),
+				Config: testAccFilterResourceConfig(profileName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_filter.test", "status", "false"),
 				),
@@ -57,16 +59,16 @@ func testAccFilterImportStateIDFunc(resourceName string) resource.ImportStateIdF
 
 // testAccFilterResourceConfig targets "malware", a real native filter
 // identifier confirmed against the live API.
-func testAccFilterResourceConfig(status bool) string {
+func testAccFilterResourceConfig(profileName string, status bool) string {
 	return fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tfacc-filter-profile"
+  name = %[1]q
 }
 
 resource "controld_filter" "test" {
   profile_id = controld_profile.test.id
   filter     = "malware"
-  status     = %[1]t
+  status     = %[2]t
 }
-`, status)
+`, profileName, status)
 }

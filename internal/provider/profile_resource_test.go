@@ -11,15 +11,18 @@ import (
 )
 
 func TestAccProfileResource(t *testing.T) {
+	name := testAccRandomName("tfacc-profile")
+	renamed := name + "-renamed"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccProfileResourceConfig("tf-acc-test-profile"),
+				Config: testAccProfileResourceConfig(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("controld_profile.test", "name", "tf-acc-test-profile"),
+					resource.TestCheckResourceAttr("controld_profile.test", "name", name),
 					resource.TestCheckResourceAttrSet("controld_profile.test", "id"),
 					resource.TestCheckResourceAttrSet("controld_profile.test", "updated"),
 				),
@@ -36,9 +39,9 @@ func TestAccProfileResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccProfileResourceConfig("tf-acc-test-profile-renamed"),
+				Config: testAccProfileResourceConfig(renamed),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("controld_profile.test", "name", "tf-acc-test-profile-renamed"),
+					resource.TestCheckResourceAttr("controld_profile.test", "name", renamed),
 				),
 			},
 			// Delete testing automatically occurs in TestCase

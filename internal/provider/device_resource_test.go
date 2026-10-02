@@ -11,15 +11,19 @@ import (
 )
 
 func TestAccDeviceResource(t *testing.T) {
+	profileName := testAccRandomName("tfacc-device-profile")
+	deviceName := testAccRandomName("tfacc-device")
+	renamed := deviceName + "-renamed"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccDeviceResourceConfig("tf-acc-test-device", "desktop-mac"),
+				Config: testAccDeviceResourceConfig(profileName, deviceName, "desktop-mac"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("controld_device.test", "name", "tf-acc-test-device"),
+					resource.TestCheckResourceAttr("controld_device.test", "name", deviceName),
 					resource.TestCheckResourceAttr("controld_device.test", "icon", "desktop-mac"),
 					resource.TestCheckResourceAttrPair("controld_device.test", "profile_id", "controld_profile.test", "id"),
 					resource.TestCheckResourceAttrSet("controld_device.test", "id"),
@@ -36,17 +40,17 @@ func TestAccDeviceResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccDeviceResourceConfig("tf-acc-test-device-renamed", "desktop-mac"),
+				Config: testAccDeviceResourceConfig(profileName, renamed, "desktop-mac"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("controld_device.test", "name", "tf-acc-test-device-renamed"),
+					resource.TestCheckResourceAttr("controld_device.test", "name", renamed),
 				),
 			},
 			// Updating a non-name attribute must not resend the unchanged name,
 			// which the API rejects as a duplicate of the device's own name.
 			{
-				Config: testAccDeviceResourceConfigWithStats("tf-acc-test-device-renamed", "desktop-mac", 1),
+				Config: testAccDeviceResourceConfigWithStats(profileName, renamed, "desktop-mac", 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("controld_device.test", "name", "tf-acc-test-device-renamed"),
+					resource.TestCheckResourceAttr("controld_device.test", "name", renamed),
 					resource.TestCheckResourceAttr("controld_device.test", "stats", "1"),
 				),
 			},
@@ -55,57 +59,60 @@ func TestAccDeviceResource(t *testing.T) {
 	})
 }
 
-func testAccDeviceResourceConfig(name, icon string) string {
+func testAccDeviceResourceConfig(profileName, name, icon string) string {
 	return fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tf-acc-test-device-profile"
+  name = %[1]q
 }
 
 resource "controld_device" "test" {
-  name       = %[1]q
+  name       = %[2]q
   profile_id = controld_profile.test.id
-  icon       = %[2]q
+  icon       = %[3]q
   learn_ip   = true
 }
-`, name, icon)
+`, profileName, name, icon)
 }
 
-func testAccDeviceResourceConfigWithStats(name, icon string, stats int) string {
+func testAccDeviceResourceConfigWithStats(profileName, name, icon string, stats int) string {
 	return fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tf-acc-test-device-profile"
+  name = %[1]q
 }
 
 resource "controld_device" "test" {
-  name       = %[1]q
+  name       = %[2]q
   profile_id = controld_profile.test.id
-  icon       = %[2]q
+  icon       = %[3]q
   learn_ip   = true
-  stats      = %[3]d
+  stats      = %[4]d
 }
-`, name, icon, stats)
+`, profileName, name, icon, stats)
 }
 
 // ControlD creates every device as pending (0) regardless of the requested
 // status, so status = 1 must not fail with an inconsistent result on create.
 func TestAccDeviceResourceStatusOnCreate(t *testing.T) {
+	profileName := testAccRandomName("tfacc-device-status-pf")
+	deviceName := testAccRandomName("tfacc-device-status")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tfacc-device-status-pf"
+  name = %[1]q
 }
 
 resource "controld_device" "test" {
-  name       = "tfacc-device-status"
+  name       = %[2]q
   profile_id = controld_profile.test.id
   icon       = "desktop-mac"
   status     = 1
 }
-`,
+`, profileName, deviceName),
 			},
 		},
 	})

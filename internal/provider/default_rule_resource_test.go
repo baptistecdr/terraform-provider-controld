@@ -11,13 +11,15 @@ import (
 )
 
 func TestAccDefaultRuleResource(t *testing.T) {
+	profileName := testAccRandomName("tfacc-default-rule")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccDefaultRuleResourceConfig(1, true),
+				Config: testAccDefaultRuleResourceConfig(profileName, 1, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_default_rule.test", "do", "1"),
 					resource.TestCheckResourceAttr("controld_default_rule.test", "status", "true"),
@@ -32,7 +34,7 @@ func TestAccDefaultRuleResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccDefaultRuleResourceConfig(0, false),
+				Config: testAccDefaultRuleResourceConfig(profileName, 0, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_default_rule.test", "do", "0"),
 					resource.TestCheckResourceAttr("controld_default_rule.test", "status", "false"),
@@ -43,16 +45,16 @@ func TestAccDefaultRuleResource(t *testing.T) {
 	})
 }
 
-func testAccDefaultRuleResourceConfig(do int, status bool) string {
+func testAccDefaultRuleResourceConfig(profileName string, do int, status bool) string {
 	return fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tfacc-default-rule-profile"
+  name = %[1]q
 }
 
 resource "controld_default_rule" "test" {
   profile_id = controld_profile.test.id
-  do         = %[1]d
-  status     = %[2]t
+  do         = %[2]d
+  status     = %[3]t
 }
-`, do, status)
+`, profileName, do, status)
 }

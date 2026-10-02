@@ -12,13 +12,15 @@ import (
 )
 
 func TestAccCustomRuleResource(t *testing.T) {
+	profileName := testAccRandomName("tfacc-custom-rule")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { testAccPreCheck(t) },
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			// Create and Read testing
 			{
-				Config: testAccCustomRuleResourceConfig(0, true, "blocked for testing"),
+				Config: testAccCustomRuleResourceConfig(profileName, 0, true, "blocked for testing"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "hostname", "tf-acc-test.example.com"),
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "do", "0"),
@@ -37,7 +39,7 @@ func TestAccCustomRuleResource(t *testing.T) {
 			},
 			// Update and Read testing
 			{
-				Config: testAccCustomRuleResourceConfig(1, false, "updated comment"),
+				Config: testAccCustomRuleResourceConfig(profileName, 1, false, "updated comment"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "do", "1"),
 					resource.TestCheckResourceAttr("controld_custom_rule.test", "status", "false"),
@@ -61,18 +63,18 @@ func testAccCustomRuleImportStateIDFunc(resourceName string) resource.ImportStat
 	}
 }
 
-func testAccCustomRuleResourceConfig(do int, status bool, comment string) string {
+func testAccCustomRuleResourceConfig(profileName string, do int, status bool, comment string) string {
 	return fmt.Sprintf(`
 resource "controld_profile" "test" {
-  name = "tf-acc-test-custom-rule-profile"
+  name = %[1]q
 }
 
 resource "controld_custom_rule" "test" {
   profile_id = controld_profile.test.id
   hostname   = "tf-acc-test.example.com"
-  do         = %[1]d
-  status     = %[2]t
-  comment    = %[3]q
+  do         = %[2]d
+  status     = %[3]t
+  comment    = %[4]q
 }
-`, do, status, comment)
+`, profileName, do, status, comment)
 }
