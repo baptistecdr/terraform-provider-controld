@@ -101,6 +101,7 @@ func (p *ControldProvider) Resources(ctx context.Context) []func() resource.Reso
 		NewCustomRuleResource,
 		NewServiceResource,
 		NewFilterResource,
+		NewEndpointScheduleResource,
 	}
 }
 

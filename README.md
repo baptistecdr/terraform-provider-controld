@@ -29,6 +29,7 @@ with ControlD.
 - `controld_custom_rule` — manage hostname-based custom rules (block, bypass, spoof, redirect)
 - `controld_service` — toggle built-in services (streaming, social media, ...) per profile
 - `controld_filter` — enable/disable native filter lists (malware, ads, ...) per profile
+- `controld_endpoint_schedule` — enforce another profile on a device during weekly time windows (undocumented API)
 - Data sources for profiles, devices, rule folders, services, native/external filters, and account
   (`controld_user`) information
 
